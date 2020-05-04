@@ -1,0 +1,13 @@
+Package: salsocustom
+Type: Package
+Title: salso with unequal Binder loss penalties
+Version: 1.0
+Date: 2020-05-04
+Author: Abhinav Natarajan, Bruno Bodin
+Maintainer: Abhinav Natarajan
+      <abhinav.v.natarajan@gmail.com>
+Description: Modified version of the salso package to allow for unequal penalties for false positives and false negatives in the calculation of the Binder loss function.
+License: What license is it under?
+Imports: Rcpp (>= 1.0.4.6)
+LinkingTo: Rcpp, RcppArmadillo
+RoxygenNote: 7.1.0
