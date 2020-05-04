@@ -9,5 +9,9 @@
 
 # RStudio #
 ###########
+*.Rproj
+*.RData
 .Rhistory
-.RData
+.Rbuildignore
+.Rproj.user
+
