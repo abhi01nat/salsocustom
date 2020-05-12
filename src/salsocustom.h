@@ -1,31 +1,29 @@
 #pragma once
-
 #include <algorithm>
+#include <numeric>
+#include <vector>
 #include <random>
 #include <limits>
+#include <omp.h>
 
-#include <RcppArmadillo.h>
+#ifndef HAS_RCPP
+#include <armadillo>
 // [[Rcpp::depends(RcppArmadillo)]]
-//#define ARMA_NO_DEBUG
+#define ARMA_NO_DEBUG
+#else
+#include <RcppArmadillo>
+#endif
 
-typedef arma::uword ind_t; // type for all counters, indices, and labels
+typedef size_t ind_t; // type for all counters, indices, and labels
+static_assert(std::numeric_limits<float>::is_iec559, "IEEE 754 required");
+extern double negative_infinity;
 
 struct salso_result {
-	arma::urowvec label;
-	double binder_loss;
-	salso_result (arma::uword N, double L) : label (N), binder_loss (L) {}
-}; 
-salso_result salso_cpp (const arma::mat& p, ind_t maxClust, double Const_Binder = 0.5, ind_t nPerm = 10000, ind_t nScans = 3);
+	arma::Row<ind_t> label;
+	ind_t numClust;
+	double binderLoss;
+	salso_result (ind_t numElem, ind_t numClust, double L) : label (numElem), numClust (numClust), binderLoss (L) {}
+};
+salso_result salso_cpp (const arma::mat& p, ind_t maxClust, double Const_Binder = 0.5, ind_t batchSize = 100, ind_t nScans = 10);
 
-struct best_clustering_t {
-	arma::uword index;
-	double binder_loss;
-}; // type that stores the output of minimise_binder
-
-#define BINDERS_TILE_SIZE 64
-#define ceild(n,d)  std::ceil(((double)(n))/((double)(d)))
-#define floord(n,d) std::floor(((double)(n))/((double)(d)))
-
-best_clustering_t minimise_binder (const arma::mat& p, const arma::umat& CI, double Const_Binder = 0.5);
-
-arma::urowvec randperm (ind_t N);
+std::vector<ind_t> randperm (ind_t N);
