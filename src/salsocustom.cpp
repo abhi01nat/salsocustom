@@ -16,32 +16,38 @@ double binder_single (const arma::mat& p, const std::vector<ind_t>& CI) {
 	return Binder_f;
 }
 
-salso_result salso_cpp (const arma::mat& epam, ind_t maxClust, double Const_Binder, ind_t batchSize, ind_t nScans) {
+salso_result_t salsoCpp (const arma::mat& epam, ind_t maxClusts, double Const_Binder, ind_t batchSize, ind_t nScans, unsigned int maxThreads, unsigned int timeLimit) {
 
-	arma::mat p = epam - Const_Binder; // we never use epam directly
+	arma::mat p = epam - Const_Binder; // we rarely use epam directly
 	ind_t N = p.n_cols; // number of items
-	salso_result result (N, 0, negative_infinity);
-	maxClust = std::min (maxClust, N); // never need more than N clusters
+	salso_result_t result (N);
+	if (maxClusts == 0) maxClusts = N;
+	else maxClusts = std::min (maxClusts, N); // never need more than N clusters
+
+	if (maxThreads > 0) omp_set_num_threads(maxThreads); 
 	int numThreads;
 #pragma omp parallel 
 	{
 #pragma omp single 
 		{
+			message_stream << "Begin clustering ";
 			numThreads = omp_get_num_threads ();
+			result.numThreads = numThreads;
 			if (numThreads == 1) {
-				message_stream << "Using 1 thread.\n";
+				message_stream << "using 1 thread.\n";
 			}
 			else {
-				message_stream << "Using " << numThreads << " threads.\n";
+				message_stream << "using " << numThreads << " threads.\n";
 			}
+			message_stream << "Number of permutations to search: " << numThreads * batchSize << '\n';
 		}
-
-		salso_result partialResult (N, 0, negative_infinity); // partial result from each thread
+    auto timeStart = std::chrono::high_resolution_clock::now();
+  
+    salso_result_t partialResult (N); // partial result from each thread
 		std::vector<ind_t> cl (N, 0); // cluster label vectors
-		ind_t currNumClust, tryNumClust; // number of clusters so far, number of clusters to try for next item
 		
 		// iterate over random orderings of of [1, ..., N]
-		for (ind_t iter = 0; iter < batchSize; ++iter) {
+		while (true) {
 			/* BEGIN ITERATION */
 
 			arma::uvec itemOrder (randperm (N)); // Generate the random item ordering for this iteration. We will assign cluster labels to items in this order.
@@ -57,31 +63,31 @@ salso_result salso_cpp (const arma::mat& epam, ind_t maxClust, double Const_Bind
 				b. Find the best among these clusterings.
 			*/
 			std::fill (cl.begin (), cl.end (), 0); // cl stores our current best labelling
-			std::vector<std::vector<ind_t>> labelIndex (maxClust); // labelIndex[t] stores the indices of the items with label t
-			labelIndex[0].push_back (0); // item 0 gets label 0 to begin with
-			currNumClust = 1; // currently only using 1 cluster			
+			std::vector<std::vector<ind_t>> labelIndices (maxClusts); // labelIndices[t] stores the indices of the items with label t
+			labelIndices[0].push_back (0); // item 0 gets label 0 to begin with
+			ind_t currNumClusts = 1, trynumClusts; // currently only using 1 cluster			
 
 			/* FIRST SEQUENTIAL ALLOCATION */
 			for (ind_t k = 1; k < N; ++k) { 
 				/* ITERATE OVER ITEMS */
 
-				tryNumClust = std::min (currNumClust + 1, maxClust); 
+				trynumClusts = std::min (currNumClusts + 1, maxClusts); 
 				double bestLabelScore = negative_infinity, tmpLabelScore;
 				ind_t bestLabel;
 
-				for (ind_t t = 0; t < tryNumClust; ++t) { 
+				for (ind_t t = 0; t < trynumClusts; ++t) { 
 					/* ITERATE OVER CANDIDATE LABELS */
 
-					tmpLabelScore = arma::accu (pOrd.unsafe_col (k).elem (arma::uvec(labelIndex[t]))); // change in Binder score if we use label t for item k
+					tmpLabelScore = arma::accu (pOrd.unsafe_col (k).elem (arma::uvec(labelIndices[t]))); // change in Binder score if we use label t for item k
 					if (tmpLabelScore > bestLabelScore) { // want to maximise the change
 						bestLabelScore = tmpLabelScore;
 						bestLabel = t;
 					}
 					/* END CURRENT LABEL */
 				} 
-				labelIndex[bestLabel].push_back (k); // item k has label bestLabel
+				labelIndices[bestLabel].push_back (k); // item k has label bestLabel
 				cl[k] = bestLabel; // item k has label bestLabel
-				if (bestLabel == tryNumClust - 1) currNumClust++; // item was assigned a label not currently in our set of labels
+				if (bestLabel == trynumClusts - 1) currNumClusts++; // item was assigned a label not currently in our set of labels
 
 				/* END CURRENT ITEM */
 			} 
@@ -103,13 +109,13 @@ salso_result salso_cpp (const arma::mat& epam, ind_t maxClust, double Const_Bind
 				for (ind_t k = 0; k < N; ++k) { 
 					/* ITERATE OVER ITEMS */
 
-					tryNumClust = std::min (currNumClust + 1, maxClust);
+					trynumClusts = std::min (currNumClusts + 1, maxClusts);
 					double bestLabelScore = negative_infinity, tmpLabelScore;
 					ind_t bestLabel;
-					for (ind_t t = 0; t < tryNumClust; ++t) { 
+					for (ind_t t = 0; t < trynumClusts; ++t) { 
 						/* ITERATE OVER CANDIDATE LABELS */
 
-						if (t != cl[k]) tmpLabelScore = arma::accu (pOrd.unsafe_col (k).elem (arma::uvec (labelIndex[t]))); // change in Binder score if we change to label t for item k (upto additive constant)
+						if (t != cl[k]) tmpLabelScore = arma::accu (pOrd.unsafe_col (k).elem (arma::uvec (labelIndices[t]))); // change in Binder score if we change to label t for item k (upto additive constant)
 						else tmpLabelScore = 0; // no change in Binder score if no change in label
 						
 						if (tmpLabelScore > bestLabelScore) { // want to maximise the change
@@ -120,10 +126,10 @@ salso_result salso_cpp (const arma::mat& epam, ind_t maxClust, double Const_Bind
 						/* END CURRENT LABEL */
 					} 
 					if (bestLabel == cl[k]) continue; // no change in label
-					labelIndex[cl[k]].erase (std::find (labelIndex[cl[k]].begin (), labelIndex[cl[k]].end (), k)); // remove current label for item k
-					labelIndex[bestLabel].push_back (k); // make label bestLabel
+					labelIndices[cl[k]].erase (std::find (labelIndices[cl[k]].begin (), labelIndices[cl[k]].end (), k)); // remove current label for item k
+					labelIndices[bestLabel].push_back (k); // make label bestLabel
 					cl[k] = bestLabel; // item k has label bestLabel
-					if (bestLabel == tryNumClust - 1) currNumClust++; // item was assigned a label not currently in our set of labels
+					if (bestLabel == trynumClusts - 1) currNumClusts++; // item was assigned a label not currently in our set of labels
 					thisScanDeltaBinder += bestLabelScore;
 
 					/* END CURRENT ITEM */
@@ -135,30 +141,69 @@ salso_result salso_cpp (const arma::mat& epam, ind_t maxClust, double Const_Bind
 			double currIterbinderLoss = binder_single (pOrd, cl);
 			if (currIterbinderLoss > partialResult.binderLoss) { // if the current iteration yielded a better clustering
 #pragma omp simd
-				for (ind_t k = 0; k < N; ++k) partialResult.label [itemOrder [k]] = cl [k]; // undo the permutation on the labels
+				for (ind_t k = 0; k < N; ++k) partialResult.labels [itemOrder [k]] = cl [k]; // undo the permutation on the labels
 				partialResult.binderLoss = currIterbinderLoss;
-				partialResult.numClust = currNumClust;
+				partialResult.numClusts = currNumClusts;
 			}
-			// message_stream << "Current iteration labels: " << partialResult.label;
+			// message_stream << "Current iteration labels: " << partialResult.labels;
+			
+			/* LOOP EXIT CONDITIONS AND BOOKKEEPING */
+			++partialResult.nIters;
+			auto timeNow = std::chrono::high_resolution_clock::now ();
+			auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(timeNow - timeStart).count ();
+			
+			/* CHECK ITERATION COUNT */
+			if (partialResult.nIters >= batchSize && batchSize > 0){
+			  partialResult.wallClockTime = duration;
+			  if (timeLimit > 0 && duration >= timeLimit) partialResult.timeLimitReached = true;
+			  break;
+			}
+			
+			/* CHECK TIMEOUT */
+			if (timeLimit > 0 && duration >= timeLimit) {
+			  partialResult.wallClockTime = duration;
+			  partialResult.timeLimitReached = true;
+			  break;
+			}
 
 			/* END ITERATION */
 		}
+
 #pragma omp critical 
 		{
-			result = (partialResult.binderLoss > result.binderLoss ? partialResult : result);
+      result.nIters += partialResult.nIters;
+      result.wallClockTime += partialResult.wallClockTime;
+      result.timeLimitReached |= partialResult.timeLimitReached;
+			if (partialResult.binderLoss > result.binderLoss) {
+			  result.labels = std::move(partialResult.labels);
+			  result.numClusts = partialResult.numClusts;
+			  result.binderLoss = partialResult.binderLoss;
+			}
 		}
 	}
 
-	// canonicalise labels
-	std::vector<ind_t> sortedLabels (N, 0), labelPerm(result.numClust, 0);
+	/* CANONICALISE LABELS STARTING AT 1 */
+	std::vector<ind_t> sortedLabels (N, 0), labelPerm(result.numClusts, 0);
 	for (ind_t i = 0, c = 0; i < N; ++i) {
-		if (labelPerm[result.label[i]] == 0) {
-			labelPerm[result.label[i]] = ++c;
+		if (labelPerm[result.labels[i]] == 0) {
+			labelPerm[result.labels[i]] = ++c;
 		}
 	}
 #pragma omp simd
-	for (ind_t i = 0; i < N; ++i) sortedLabels[i] = labelPerm[result.label[i]];
-	result.label = std::move(sortedLabels);
+	for (ind_t i = 0; i < N; ++i) sortedLabels[i] = labelPerm[result.labels[i]];
+	result.labels = std::move(sortedLabels);
+	
+	/* ADJUST THE BINDER LOSS TO CORRECTLY REFLECT THE SCORE */
+	result.binderLoss = -result.binderLoss + (1 - Const_Binder) * arma::accu(epam);
+	
+	/* OUTPUT IF NOT IN R */
+#ifndef HAS_RCPP
+	message_stream << "Cluster labels:\n" << result.labels;
+	message_stream << "Finished clustering, found " << result.numClusts << " clusters.\n";
+	message_stream << "Normalised binder loss: " << result.binderLoss << '\n';
+	message_stream << "Number of permutations scanned: " << result.nIters << '\n';
+	message_stream << "Time limit reached: " << result.timeLimitReached;
+#endif
 	return result;
 }
 

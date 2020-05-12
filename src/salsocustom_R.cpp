@@ -1,8 +1,13 @@
 #include "salsocustom.h"
 
 // [[Rcpp::export(name= ".salso")]]
-Rcpp::List salso_Rcpp_unsafe (const Rcpp::NumericMatrix& p, int maxClust,  double Const_Binder = 0.5, int nPerm = 10000, int nScans = 3) {
-    salso_result tmp_result = salso_cpp(Rcpp::as<arma::mat>(p), maxClust, Const_Binder, nPerm, nScans);
-    return Rcpp::List::create(Rcpp::_["Labels"] = tmp_result.label + 1, // have our labels start from 1
-                            Rcpp::_["BinderLoss"] = tmp_result.binder_loss);
+Rcpp::List salsoRcpp (const Rcpp::NumericMatrix& epam, int maxClusts,  double Const_Binder, int batchSize, int nScans, int maxThreads, int timeLimit) {
+    salso_result_t tmpResult = salsoCpp(Rcpp::as<arma::mat>(epam), maxClusts, Const_Binder, batchSize, nScans, maxThreads, timeLimit);
+    return Rcpp::List::create(Rcpp::_["Labels"] = tmpResult.labels, 
+                            Rcpp::_["BinderLoss"] = tmpResult.binderLoss,
+                            Rcpp::_["NumClusts"] = tmpResult.numClusts,
+                            Rcpp::_["NumPermutations"] = tmpResult.nIters, 
+                            Rcpp::_["WallClockTime"] = tmpResult.wallClockTime,
+                            Rcpp::_["TimeLimitReached"] = tmpResult.timeLimitReached,
+                            Rcpp::_["NumThreads"] = tmpResult.numThreads);
 }

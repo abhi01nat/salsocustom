@@ -4,21 +4,42 @@
 \alias{salso}
 \title{Sequentially Allocated Latent Structure Optimisation}
 \usage{
-salso(p, maxClust, Const_Binder = 0.5, nPerm = 10000L, nScans = 3L)
+salso(
+  epam,
+  maxClusts = 0L,
+  Const_Binder = 0.5,
+  batchSize = 1000L,
+  nScans = 10L,
+  maxThreads = 0L,
+  timeLimit = 300000L
+)
 }
 \arguments{
-\item{p}{co-clustering probability matrix, also called the expected adjacency matrix}
+\item{epam}{Expected Pairwise Allocation Matrix, i.e., the matrix whose entries \eqn{E_{ij}} is the posterior probability that items \eqn{i} and \eqn{j} are together.}
 
-\item{maxClust}{maximum number of clusters}
+\item{maxClusts}{Maximum number of clusters. The actual number of clusters searched may be lower. If set to 0L, the maximum is automatically limited by the number of items.}
 
-\item{Const_Binder}{relative penalty in the Binder loss function for false-positives vs false-negatives}
+\item{Const_Binder}{Relative penalty in the Binder loss function for false-positives vis-a-vis false-negatives. Must be a real number in the interval [0, 1].}
 
-\item{nPerm}{number of random permutations to start optimising from}
+\item{batchSize}{Number of permutations scanned per thread. If set to 0L, the thread will continue to scan permutations until it times out (in which case \code{timeLimit} cannot be 0L).}
 
-\item{nScans}{number of scans for each permutation}
+\item{nScans}{Number of scans for each permutation.}
+
+\item{maxThreads}{Maximum number of threads to use. If set to 0L (default), the maximum number of threads will be determined by the runtime. Set to 1L for no parallelisation. The actual number of threads used may be lower than \code{maxThreads}.}
+
+\item{timeLimit}{Maximum computation time for each thread in milliseconds. The actual computational time may be higher, since the time limit is only checked at the end of each iteration. If set to 0L, the thread will never time out (in which case \code{batchSize} cannot be 0L).}
 }
 \value{
-list containing a vector of cluster labels and the associated binder loss function
+A list containing the following items:
+\enumerate{
+\item \code{Labels} - the vector of cluster labels
+\item \code{BinderLoss} - the associated binder loss function
+\item \code{NumClusts} - the number of clusters found
+\item \code{NumPermutations} - the number of permutations actually scanned
+\item \code{WallClockTime} - cumulative wall-clock time used by all threads in milliseconds
+\item \code{TimeLimitReached} - whether the computation time limit was reached in any of the threads
+\item \code{NumThreads} - actual number of threads used.
+}
 }
 \description{
 Heuristic clustering to minimise the expected Binder loss function with respect to a given co-clustering probability matrix.

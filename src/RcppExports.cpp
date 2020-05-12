@@ -6,24 +6,26 @@
 
 using namespace Rcpp;
 
-// salso_Rcpp_unsafe
-Rcpp::List salso_Rcpp_unsafe(const Rcpp::NumericMatrix& p, int maxClust, double Const_Binder, int nPerm, int nScans);
-RcppExport SEXP _salsocustom_salso_Rcpp_unsafe(SEXP pSEXP, SEXP maxClustSEXP, SEXP Const_BinderSEXP, SEXP nPermSEXP, SEXP nScansSEXP) {
+// salsoRcpp
+Rcpp::List salsoRcpp(const Rcpp::NumericMatrix& epam, int maxClusts, double Const_Binder, int batchSize, int nScans, int maxThreads, int timeLimit);
+RcppExport SEXP _salsocustom_salsoRcpp(SEXP epamSEXP, SEXP maxClustsSEXP, SEXP Const_BinderSEXP, SEXP batchSizeSEXP, SEXP nScansSEXP, SEXP maxThreadsSEXP, SEXP timeLimitSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const Rcpp::NumericMatrix& >::type p(pSEXP);
-    Rcpp::traits::input_parameter< int >::type maxClust(maxClustSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::NumericMatrix& >::type epam(epamSEXP);
+    Rcpp::traits::input_parameter< int >::type maxClusts(maxClustsSEXP);
     Rcpp::traits::input_parameter< double >::type Const_Binder(Const_BinderSEXP);
-    Rcpp::traits::input_parameter< int >::type nPerm(nPermSEXP);
+    Rcpp::traits::input_parameter< int >::type batchSize(batchSizeSEXP);
     Rcpp::traits::input_parameter< int >::type nScans(nScansSEXP);
-    rcpp_result_gen = Rcpp::wrap(salso_Rcpp_unsafe(p, maxClust, Const_Binder, nPerm, nScans));
+    Rcpp::traits::input_parameter< int >::type maxThreads(maxThreadsSEXP);
+    Rcpp::traits::input_parameter< int >::type timeLimit(timeLimitSEXP);
+    rcpp_result_gen = Rcpp::wrap(salsoRcpp(epam, maxClusts, Const_Binder, batchSize, nScans, maxThreads, timeLimit));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_salsocustom_salso_Rcpp_unsafe", (DL_FUNC) &_salsocustom_salso_Rcpp_unsafe, 5},
+    {"_salsocustom_salsoRcpp", (DL_FUNC) &_salsocustom_salsoRcpp, 7},
     {NULL, NULL, 0}
 };
 
