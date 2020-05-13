@@ -85,8 +85,8 @@ salso <- function(eam, maxClusts=0L, Const_Binder = 0.5, batchSize = 1000L, nSca
 
 #' Compute the Binder loss function
 #' 
-#' Compute the Binder loss function of a vector of partition labels 
-#' with respect to an expected pairwise allocation matrix.
+#' Compute the Binder loss function of a partitioning
+#' with respect to an expected adjacency matrix.
 #' 
 #' @param eam Expected Adjacency Matrix, i.e., 
 #' the matrix whose entries \eqn{E_{ij}} is the posterior probability 
@@ -103,15 +103,54 @@ computeBinderLoss <- function(eam, labels, Const_Binder = 0.5){
         stop(paste("eam must be a symmetric matrix with values between 0 and 1, ",
                    "and 1s on the diagonal."))
     }
-    if (any(!is.numeric(labels)) | 
-        any(!is.finite(labels)) | 
-        any(!is.integer(labels))) {
+    if (isInvalidLabelVector(labels)) {
         stop("labels must be a vector of integers.")
     }
     if (length(labels) != ncol(eam)) {
         stop("Incompatible size of eam and labels.")
     }
     return (.computeBinderLoss(eam, labels, Const_Binder))
+}
+
+#' Convert partition labels to adjacency matrix
+#' 
+#' @param labels The integer vector of partition labels.
+#' @return A binary integer matrix \eqn{E} where 
+#' \eqn{E_{ij} = 1} if \eqn{i} and \eqn{j} if
+#' item i and item j have the same partition label, and 0 otherwise.
+computeAdjacencyMatrix <- function(labels) {
+    if (isInvalidLabelVector(labels)) {
+        stop("labels must be a vector of integers.")
+    }
+    N <- length(labels)
+    return (matrix(as.integer(outer(labels, labels, "==")), ncol=N))
+}
+
+#' Binder distance of two partitions
+#' 
+#' Compute the binder loss function of a partitioning
+#' with respect to the adjacency matrix of another partitioning.
+#' @param testLabels The vector of integer labels of the partitioning
+#' @param refLabels The vector of partition labels to use to construct the adjacency matrix
+#' @param Const_Binder Relative penalty in the Binder loss function 
+#' for false-positives vis-a-vis false-negatives. 
+#' Must be a real number in the interval [0, 1]. 
+#' @return The value of the Binder loss function of \code{testLabels} 
+#' with respect to the adjacency matrix of \code{refLabels}.
+computeBinderDistance <- function(testLabels, refLabels, Const_Binder) {
+    if (isInvalidLabelVector(testLabels)) {
+        stop("labels must be a vector of integers.")
+    }
+    if (isInvalidLabelVector(refLabels)) {
+        stop("labels must be a vector of integers.")
+    }
+    if (!is.numeric(Const_Binder) | 
+        !is.finite(Const_Binder) | 
+        Const_Binder < 0 | 
+        Const_Binder > 1) {
+        stop("Const_Binder must be a number between 0 and 1.")
+    }
+    return(computeBinderLoss(computeAdjacencyMatrix(refLabels), testLabels, Const_Binder))
 }
 
 isInvalidAdjacencyMatrix <- function(p) {
@@ -122,4 +161,10 @@ isInvalidAdjacencyMatrix <- function(p) {
                  any(p > 1) | 
                  any(p < 0) | 
                  sum(diag(p)) != nrow(p))
+}
+
+isInvalidLabelVector <- function(c) {
+    return (any(!is.numeric(c)) | 
+                any(!is.finite(c)) | 
+                any(!is.integer(c)))
 }
