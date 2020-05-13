@@ -4,4 +4,4 @@ N <- 500L
 p <- diag(rep(1, N))
 p[1, 2] <- 1
 p[2, 1] <- 1
-salso(p, N, batchSize=500L)
+salso(p, N)

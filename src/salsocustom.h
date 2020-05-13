@@ -29,6 +29,7 @@ struct salso_result_t {
 	double binderLoss;
 	salso_result_t (ind_t numElems) : nIters(0), wallClockTime(0), timeLimitReached(false), numThreads(0), labels (numElems), numClusts (0), binderLoss (negative_infinity) {}
 };
-salso_result_t salsoCpp (const arma::mat& p, ind_t maxClusts, double Const_Binder, ind_t batchSize, ind_t nScans, unsigned int maxThreads, unsigned int timeLimit);
+salso_result_t salsoCpp (const arma::mat& eam, ind_t maxClusts, double Const_Binder, ind_t batchSize, ind_t nScans, unsigned int maxThreads, unsigned int timeLimit);
 
+double computeBinderLossCpp (const arma::mat& eam, const arma::ivec& partitionLabels, double Const_Binder);
 std::vector<ind_t> randperm (ind_t N);

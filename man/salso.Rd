@@ -5,7 +5,7 @@
 \title{Sequentially Allocated Latent Structure Optimisation}
 \usage{
 salso(
-  epam,
+  eam,
   maxClusts = 0L,
   Const_Binder = 0.5,
   batchSize = 1000L,
@@ -15,24 +15,40 @@ salso(
 )
 }
 \arguments{
-\item{epam}{Expected Pairwise Allocation Matrix, i.e., the matrix whose entries \eqn{E_{ij}} is the posterior probability that items \eqn{i} and \eqn{j} are together.}
+\item{eam}{Expected Adjacency Matrix, i.e., 
+the matrix whose entries \eqn{E_{ij}} is the (posterior) probability 
+that items \eqn{i} and \eqn{j} are together.}
 
-\item{maxClusts}{Maximum number of clusters. The actual number of clusters searched may be lower. If set to 0L, the maximum is automatically limited by the number of items.}
+\item{maxClusts}{Maximum number of clusters. 
+The actual number of clusters searched may be lower. 
+If set to 0L, the maximum is automatically limited by the number of items.}
 
-\item{Const_Binder}{Relative penalty in the Binder loss function for false-positives vis-a-vis false-negatives. Must be a real number in the interval [0, 1].}
+\item{Const_Binder}{Relative penalty in the Binder loss function 
+for false-positives vis-a-vis false-negatives. 
+Must be a real number in the interval [0, 1].}
 
-\item{batchSize}{Number of permutations scanned per thread. If set to 0L, the thread will continue to scan permutations until it times out (in which case \code{timeLimit} cannot be 0L).}
+\item{batchSize}{Number of permutations scanned per thread. 
+If set to 0L, the thread will continue to scan permutations until it times out 
+(in which case \code{timeLimit} cannot be 0L).}
 
 \item{nScans}{Number of scans for each permutation.}
 
-\item{maxThreads}{Maximum number of threads to use. If set to 0L (default), the maximum number of threads will be determined by the runtime. Set to 1L for no parallelisation. The actual number of threads used may be lower than \code{maxThreads}.}
+\item{maxThreads}{Maximum number of threads to use. 
+If set to 0L (default), the maximum number of threads 
+will be determined by the runtime. 
+Set to 1L for no parallelisation. 
+The actual number of threads used may be lower than \code{maxThreads}.}
 
-\item{timeLimit}{Maximum computation time for each thread in milliseconds. The actual computational time may be higher, since the time limit is only checked at the end of each iteration. If set to 0L, the thread will never time out (in which case \code{batchSize} cannot be 0L).}
+\item{timeLimit}{Maximum computation time for each thread in milliseconds. 
+The actual computational time may be higher, 
+since the time limit is only checked at the end of each iteration. 
+If set to 0L, the thread will never time out 
+(in which case \code{batchSize} cannot be 0L).}
 }
 \value{
 A list containing the following items:
-\enumerate{
-\item \code{Labels} - the vector of cluster labels
+\itemize{
+\item \code{Labels} - the vector of partition labels
 \item \code{BinderLoss} - the associated binder loss function
 \item \code{NumClusts} - the number of clusters found
 \item \code{NumPermutations} - the number of permutations actually scanned
@@ -42,5 +58,6 @@ A list containing the following items:
 }
 }
 \description{
-Heuristic clustering to minimise the expected Binder loss function with respect to a given co-clustering probability matrix.
+Heuristic partitioning to minimise the expected Binder loss function 
+with respect to a given expected adjacency matrix.
 }
