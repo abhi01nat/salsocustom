@@ -86,7 +86,7 @@ unsigned int timeLimit) {
 				} 
 				labelIndices[bestLabel].push_back (k); // item k has label bestLabel
 				cl[k] = bestLabel; // item k has label bestLabel
-				if (bestLabel == tryNumClusts - 1) currNumClusts++; // item was assigned a label\
+				if (bestLabel == tryNumClusts - 1 && currNumClusts < maxClusts) currNumClusts++; // item was assigned a label\
                 not currently in our set of labels
 				currIterBinderScore += bestLabelDelta;
 				/* END CURRENT ITEM */
@@ -132,7 +132,7 @@ unsigned int timeLimit) {
                         labelIndices[cl[k]].begin (), labelIndices[cl[k]].end (), k)); // remove current label for item k
 					labelIndices[bestLabel].push_back (k); // make label bestLabel
 					cl[k] = bestLabel; // item k has label bestLabel
-					if (bestLabel == tryNumClusts - 1) currNumClusts++; // item was assigned a label\
+					if (bestLabel == tryNumClusts - 1 && currNumClusts < maxClusts) currNumClusts++; // item was assigned a label\
                     not currently in our set of labels
 					thisScanDeltaBinder += bestLabelDelta;
 					/* END CURRENT ITEM */
@@ -188,7 +188,7 @@ unsigned int timeLimit) {
 	}
 
 	/* CANONICALISE LABELS STARTING AT 1 */
-	std::vector<ind_t> sortedLabels (N, 0), labelPerm(result.numClusts, 0);
+	/*std::vector<ind_t> sortedLabels (N, 0), labelPerm(result.numClusts, 0);
 	for (ind_t i = 0, c = 0; i < N; ++i) {
 		if (labelPerm[result.labels[i]] == 0) {
 			labelPerm[result.labels[i]] = ++c;
@@ -196,7 +196,7 @@ unsigned int timeLimit) {
 	}
 #pragma omp simd
 	for (ind_t i = 0; i < N; ++i) sortedLabels[i] = labelPerm[result.labels[i]];
-	result.labels = std::move(sortedLabels);
+	result.labels = std::move(sortedLabels);*/
 	
 	/* ADJUST THE BINDER LOSS TO CORRECTLY REFLECT THE SCORE */
 	result.binderLoss = -result.binderLoss + (1 - Const_Binder) * arma::accu(arma::trimatu(eam, 1));
