@@ -86,7 +86,7 @@ unsigned int timeLimit) {
 				} 
 				labelIndices[bestLabel].push_back (k); // item k has label bestLabel
 				cl[k] = bestLabel; // item k has label bestLabel
-				if (bestLabel == tryNumClusts - 1) currNumClusts++; // item was assigned a label\
+				if (bestLabel == tryNumClusts - 1 && currNumClusts < maxClusts) currNumClusts++; // item was assigned a label\
                 not currently in our set of labels
 				currIterBinderScore += bestLabelDelta;
 				/* END CURRENT ITEM */
@@ -132,7 +132,7 @@ unsigned int timeLimit) {
                         labelIndices[cl[k]].begin (), labelIndices[cl[k]].end (), k)); // remove current label for item k
 					labelIndices[bestLabel].push_back (k); // make label bestLabel
 					cl[k] = bestLabel; // item k has label bestLabel
-					if (bestLabel == tryNumClusts - 1) currNumClusts++; // item was assigned a label\
+					if (bestLabel == tryNumClusts - 1 && currNumClusts < maxClusts) currNumClusts++; // item was assigned a label\
                     not currently in our set of labels
 					thisScanDeltaBinder += bestLabelDelta;
 					/* END CURRENT ITEM */

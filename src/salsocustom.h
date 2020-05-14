@@ -15,7 +15,7 @@
 // [[Rcpp::depends(RcppArmadillo)]]
 #endif
 
-typedef size_t ind_t; // type for all counters, indices, and labels
+typedef arma::uword ind_t; // type for all counters, indices, and labels
 static_assert(std::numeric_limits<float>::is_iec559, "IEEE 754 required");
 extern double negative_infinity;
 
