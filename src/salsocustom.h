@@ -16,6 +16,7 @@
 #endif
 
 typedef arma::uword ind_t; // type for all counters, indices, and labels
+typedef arma::Col<ind_t> labelVec_t; // label vectors
 static_assert(std::numeric_limits<float>::is_iec559, "IEEE 754 required");
 extern double negative_infinity;
 
@@ -24,7 +25,7 @@ struct salso_result_t {
   unsigned int wallClockTime;
   bool timeLimitReached;
   int numThreads;
-	arma::Row<ind_t> labels;
+  labelVec_t labels;
 	ind_t numClusts;
 	double binderLoss;
 	salso_result_t (ind_t numElems) : nIters(0), wallClockTime(0), timeLimitReached(false), numThreads(0), labels (numElems), numClusts (0), binderLoss (negative_infinity) {}

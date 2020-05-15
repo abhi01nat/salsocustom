@@ -37,50 +37,40 @@
 #' \item \code{NumThreads} - actual number of threads used.
 #' }
 salso <- function(eam, maxClusts=0L, Const_Binder = 0.5, batchSize = 1000L, nScans = 10L, maxThreads = 0L, timeLimit = 300000L) {
-    if (isInvalidAdjacencyMatrix(eam)){
+    if (!is.validAdjacencyMatrix(eam)){
         stop(paste("eam must be a symmetric matrix with values between 0 and 1, ",
         "and 1s on the diagonal."))
     }
-    if (!is.numeric(maxClusts) | 
-        !is.finite(maxClusts) | 
-        !is.integer(maxClusts) | 
+    if (!is.finiteInteger(maxClusts) | 
         maxClusts < 0) {
         stop("maxClusts must be a nonnegative integer. ")
     }
-    if (!is.numeric(Const_Binder) | 
-        !is.finite(Const_Binder) | 
-        Const_Binder < 0 | 
-        Const_Binder > 1) {
+    if (!is.nonNegNumberLessThan1(Const_Binder)) {
         stop("Const_Binder must be a number between 0 and 1.")
     }
-    if (!is.numeric(batchSize) | 
-        !is.finite(batchSize) | 
-        !is.integer(batchSize) | 
+    if (!is.finiteInteger(batchSize) | 
         batchSize < 0) {
         stop("batchSize must be a nonnegative integer.")
     }
-    if (!is.numeric(nScans) | 
-        !is.finite(nScans) | 
-        !is.integer(nScans) | 
+    if (!is.finiteInteger(nScans) | 
         nScans <= 0) {
         stop("nScans must be a positive integer.")
     }
-    if (!is.numeric(maxThreads) | 
-        !is.finite(maxThreads) | 
-        !is.integer(maxThreads) | 
+    if (!is.finiteInteger(maxThreads) | 
         maxThreads < 0) {
         stop("maxThreads must be a nonnegative integer.")
     }
-    if (!is.numeric(timeLimit) | 
-        !is.finite(timeLimit) | 
-        !is.integer(timeLimit) | 
+    if (!is.finiteInteger(timeLimit) | 
         timeLimit < 0) {
         stop("timeLimit must be a nonnegative integer.")
     }
     if (timeLimit == 0L & batchSize == 0L) {
         stop("batchSize and timeLimit cannot both be 0.")
     }
-    return (.salso(eam, maxClusts, Const_Binder, batchSize, nScans, maxThreads, timeLimit))
+    
+    temp = .salso(eam, maxClusts, Const_Binder, batchSize, nScans, maxThreads, timeLimit)
+    temp[["Labels"]] <- as.vector(temp[["Labels"]])
+    return (temp)
 }
 
 #' Compute the Binder loss function
@@ -99,11 +89,11 @@ salso <- function(eam, maxClusts=0L, Const_Binder = 0.5, batchSize = 1000L, nSca
 #' @return The value of the Binder loss function of the given partition labels
 #' with respect to the given pairwise allocation matrix.  
 computeBinderLoss <- function(eam, labels, Const_Binder = 0.5){
-    if (isInvalidAdjacencyMatrix(eam)){
+    if (!is.validAdjacencyMatrix(eam)){
         stop(paste("eam must be a symmetric matrix with values between 0 and 1, ",
                    "and 1s on the diagonal."))
     }
-    if (isInvalidLabelVector(labels)) {
+    if (!all(is.finiteInteger(c))) {
         stop("labels must be a vector of integers.")
     }
     if (length(labels) != ncol(eam)) {
@@ -119,7 +109,7 @@ computeBinderLoss <- function(eam, labels, Const_Binder = 0.5){
 #' \eqn{E_{ij} = 1} if \eqn{i} and \eqn{j} if
 #' item i and item j have the same partition label, and 0 otherwise.
 computeAdjacencyMatrix <- function(labels) {
-    if (isInvalidLabelVector(labels)) {
+    if (!all(is.finiteInteger(c))) {
         stop("labels must be a vector of integers.")
     }
     N <- length(labels)
@@ -138,33 +128,29 @@ computeAdjacencyMatrix <- function(labels) {
 #' @return The value of the Binder loss function of \code{testLabels} 
 #' with respect to the adjacency matrix of \code{refLabels}.
 computeBinderDistance <- function(testLabels, refLabels, Const_Binder) {
-    if (isInvalidLabelVector(testLabels)) {
+    if (!all(is.finiteInteger(c))) {
         stop("labels must be a vector of integers.")
     }
-    if (isInvalidLabelVector(refLabels)) {
+    if (!all(is.finiteInteger(c))) {
         stop("labels must be a vector of integers.")
     }
-    if (!is.numeric(Const_Binder) | 
-        !is.finite(Const_Binder) | 
-        Const_Binder < 0 | 
-        Const_Binder > 1) {
+    if (!is.nonNegNumberLessThan1(Const_Binder)) {
         stop("Const_Binder must be a number between 0 and 1.")
     }
     return(computeBinderLoss(computeAdjacencyMatrix(refLabels), testLabels, Const_Binder))
 }
 
-isInvalidAdjacencyMatrix <- function(p) {
-    return(any(!is.numeric(p)) | 
-                 any(!is.finite(p)) | 
-                 nrow(p) != ncol(p) | 
-                 any(p != t(p)) | 
-                 any(p > 1) | 
-                 any(p < 0) | 
-                 sum(diag(p)) != nrow(p))
+is.validAdjacencyMatrix <- function(p) {
+    return(all(is.nonNegNumberLessThan1(p)) & 
+             nrow(p) == ncol(p) & 
+             all(p == t(p)) & 
+             sum(diag(p)) == nrow(p))
 }
 
-isInvalidLabelVector <- function(c) {
-    return (any(!is.numeric(c)) | 
-                any(!is.finite(c)) | 
-                any(!is.integer(c)))
+is.finiteInteger <- function(x) {
+    return (is.integer(x) & is.finite(x))
+}
+
+is.nonNegNumberLessThan1 <- function(x) {
+    return (is.numeric(x) & is.finite(x) & x <= 1 & x >= 0)
 }

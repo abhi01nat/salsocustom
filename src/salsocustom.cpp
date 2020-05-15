@@ -40,7 +40,7 @@ unsigned int timeLimit) {
     	auto timeStart = std::chrono::high_resolution_clock::now();
   
     	salso_result_t partialResult (N); // partial result from each thread
-		std::vector<ind_t> cl (N, 0); // cluster label vectors
+    	labelVec_t cl (N, arma::fill::zeros); // cluster label vectors
 		
 		// iterate over random orderings of of [1, ..., N]
 		while (true) {
@@ -188,7 +188,7 @@ unsigned int timeLimit) {
 	}
 
 	/* CANONICALISE LABELS STARTING AT 1 */
-	std::vector<ind_t> sortedLabels (N, 0), labelPerm(result.numClusts, 0);
+	labelVec_t sortedLabels (N, arma::fill::zeros), labelPerm(result.numClusts, arma::fill::zeros);
 	for (ind_t i = 0, c = 0; i < N; ++i) {
 		if (labelPerm[result.labels[i]] == 0) {
 			labelPerm[result.labels[i]] = ++c;
