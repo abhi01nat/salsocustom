@@ -36,7 +36,7 @@
 #' \item \code{TimeLimitReached} - whether the computation time limit was reached in any of the threads
 #' \item \code{NumThreads} - actual number of threads used.
 #' }
-salso <- function(eam, maxClusts=0L, Const_Binder = 0.5, batchSize = 1000L, nScans = 10L, maxThreads = 0L, timeLimit = 300000L) {
+salso <- function(eam, maxClusts=0L, Const_Binder = 0.5, batchSize = 1000L, nScans = 10L, maxThreads = 0L, timeLimit = 600000L) {
     if (!is.validAdjacencyMatrix(eam)){
         stop(paste("eam must be a symmetric matrix with values between 0 and 1, ",
         "and 1s on the diagonal."))
@@ -69,7 +69,7 @@ salso <- function(eam, maxClusts=0L, Const_Binder = 0.5, batchSize = 1000L, nSca
     }
     
     temp = .salso(eam, maxClusts, Const_Binder, batchSize, nScans, maxThreads, timeLimit)
-    temp[["Labels"]] <- as.vector(temp[["Labels"]])
+    temp[["Labels"]] <- as.integer(as.vector(temp[["Labels"]]))
     return (temp)
 }
 
@@ -93,7 +93,7 @@ computeBinderLoss <- function(eam, labels, Const_Binder = 0.5){
         stop(paste("eam must be a symmetric matrix with values between 0 and 1, ",
                    "and 1s on the diagonal."))
     }
-    if (!all(is.finiteInteger(c))) {
+    if (!all(is.finiteInteger(labels))) {
         stop("labels must be a vector of integers.")
     }
     if (length(labels) != ncol(eam)) {
@@ -109,7 +109,7 @@ computeBinderLoss <- function(eam, labels, Const_Binder = 0.5){
 #' \eqn{E_{ij} = 1} if \eqn{i} and \eqn{j} if
 #' item i and item j have the same partition label, and 0 otherwise.
 computeAdjacencyMatrix <- function(labels) {
-    if (!all(is.finiteInteger(c))) {
+    if (!all(is.finiteInteger(labels))) {
         stop("labels must be a vector of integers.")
     }
     N <- length(labels)
@@ -128,10 +128,10 @@ computeAdjacencyMatrix <- function(labels) {
 #' @return The value of the Binder loss function of \code{testLabels} 
 #' with respect to the adjacency matrix of \code{refLabels}.
 computeBinderDistance <- function(testLabels, refLabels, Const_Binder) {
-    if (!all(is.finiteInteger(c))) {
+    if (!all(is.finiteInteger(testLabels))) {
         stop("labels must be a vector of integers.")
     }
-    if (!all(is.finiteInteger(c))) {
+    if (!all(is.finiteInteger(refLabels))) {
         stop("labels must be a vector of integers.")
     }
     if (!is.nonNegNumberLessThan1(Const_Binder)) {
