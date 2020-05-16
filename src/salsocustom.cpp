@@ -110,10 +110,11 @@ unsigned int timeLimit) {
 					/* ITERATE OVER ITEMS */
 
 					tryNumClusts = std::min (currNumClusts + 1, maxClusts);
-					double bestLabelDelta = negative_infinity, tmpLabelDelta, currLabelDelta;
+					double bestLabelDelta = 0, tmpLabelDelta, currLabelDelta; // bestLabelDelta is do nothing
 					currLabelDelta = arma::accu (pOrd.unsafe_col (k).elem (
-                        arma::uvec (labelIndices[cl[k]]))); // contribution to current Binder score due to the kth item
-					ind_t bestLabel;
+                        arma::uvec (labelIndices[cl[k]]))); // contribution to current Binder score \
+					due to the kth item
+					ind_t bestLabel = cl[k];
 					for (ind_t t = 0; t < tryNumClusts; ++t) { 
 						/* ITERATE OVER CANDIDATE LABELS */
 						tmpLabelDelta = -currLabelDelta + 
