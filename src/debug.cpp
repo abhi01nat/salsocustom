@@ -1,9 +1,9 @@
 #include "debug.h"
 
 #ifndef HAS_RCPP
-std::ostream& message_stream = std::cout;
+std::ostream& messageStream = std::cout;
 #else
-std::ostream& message_stream = Rcpp::Rcout;
+std::ostream& messageStream = Rcpp::Rcout;
 #endif
 
 std::string to_string (const std::vector<unsigned int> v) {
@@ -14,3 +14,4 @@ std::string to_string (const std::vector<unsigned int> v) {
 	}
 	return s.str ();
 }
+
