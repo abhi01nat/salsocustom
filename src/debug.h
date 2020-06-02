@@ -11,4 +11,10 @@
 
 std::string to_string (const std::vector<size_t> v);
 
-extern std::ostream& message_stream;
+#define VERBOSE_DBG true
+
+extern std::ostream& messageStream;
+
+#define debugStream \
+if (VERBOSE_DBG) {} \
+else messageStream
