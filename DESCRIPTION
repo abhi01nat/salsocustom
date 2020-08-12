@@ -10,4 +10,4 @@ Description: Modified version of the salso package to allow for unequal penaltie
 License: What license is it under?
 Imports: Rcpp (>= 1.0.4.6)
 LinkingTo: Rcpp, RcppArmadillo
-RoxygenNote: 7.1.0
+RoxygenNote: 7.1.1

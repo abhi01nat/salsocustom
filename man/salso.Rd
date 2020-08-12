@@ -11,7 +11,7 @@ salso(
   batchSize = 1000L,
   nScans = 10L,
   maxThreads = 0L,
-  timeLimit = 300000L
+  timeLimit = 600000L
 )
 }
 \arguments{

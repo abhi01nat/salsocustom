@@ -23,6 +23,6 @@ The value of the Binder loss function of the given partition labels
 with respect to the given pairwise allocation matrix.
 }
 \description{
-Compute the Binder loss function of a vector of partition labels 
-with respect to an expected pairwise allocation matrix.
+Compute the Binder loss function of a partitioning
+with respect to an expected adjacency matrix.
 }
